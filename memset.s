@@ -17,7 +17,7 @@ cmp rdx, 64
 jb under64
 
 cmp rdx, 800
-jae erms
+jae repeat
 
 # big
 movups [rdi], xmm0
@@ -91,9 +91,21 @@ mov [rdi + rdx - 1], sil
 done:
 ret
 
-erms:
+repeat:
+.ifdef erms
 xchg rax, rsi
 mov rcx, rdx
 rep stosb
 mov rax, rsi
 ret
+.else
+xchg rax, rsi
+mov rcx, rdx
+shr rcx, 8
+rep stosq
+mov rax, rsi
+lea rcx, [rax + rdx - 48] # last 3 aligned stores
+and rcx, ~15
+lea r8, [rax + rdx - 16]  # last (unaligned) store
+jmp trailing
+.endif
