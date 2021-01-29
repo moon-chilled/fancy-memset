@@ -23,6 +23,10 @@ and rsi, ~15
 sub rdi, rsi
 add rdx, rdi
 
+lea rcx, [rsi + rdx - 48] # last 3 aligned stores
+and rcx, ~15
+lea r8, [rsi + rdx - 16]  # last (unaligned) store
+
 cmp rdx, 64
 jb trailing
 
@@ -32,19 +36,15 @@ movaps [rsi + 16], xmm0
 movaps [rsi + 32], xmm0
 movaps [rsi + 48], xmm0
 add rsi, 64
-sub rdx, 64
-cmp rdx, 64
-jae bigloop
+cmp rsi, rcx
+jb bigloop
 
 trailing:
 # trailing <64 bytes
-lea rcx, [rsi + rdx - 16] # last (unaligned) store
-lea rdx, [rsi + rdx - 48] # last 3 aligned stores.  Overwrite rdx because we don't need it anymore
-and rdx, ~15
-movaps [rdx], xmm0
-movaps [rdx + 16], xmm0
-movaps [rdx + 32], xmm0
-movups [rcx], xmm0
+movaps [rcx], xmm0
+movaps [rcx + 16], xmm0
+movaps [rcx + 32], xmm0
+movups [r8], xmm0
 ret
 
 under64:
