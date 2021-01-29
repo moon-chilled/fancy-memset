@@ -28,7 +28,7 @@ void bench(void *buf, size_t l) {
 	bencher(sys_before, sys_after, sys_avg, sys_stddev, memset);
 	bencher(fm_before, fm_after, fm_avg, fm_stddev, fast_memset);
 
-	printf("Sys: %llu +/- %llu cycles; fm: %llu +/- %llu cycles\n", sys_avg, sys_stddev, fm_avg, fm_stddev);
+	printf("Sys: %llu +/- %llu cycles;\n fm: %llu +/- %llu cycles\n", sys_avg, sys_stddev, fm_avg, fm_stddev);
 }
 
 void test(size_t l) {
