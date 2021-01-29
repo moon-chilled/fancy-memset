@@ -94,6 +94,7 @@ mov [rdi + rdx - 1], sil
 .done:
 ret
 
+# todo apparently stosq is worth it for very large sizes (tipping point is >800 <4096) on amd chips.  Investigate.  (At least, it's better than the above loop; maybe an even-more-unrolled one beats it?)
 .ifdef erms
 .huge:
 xchg rax, rsi
