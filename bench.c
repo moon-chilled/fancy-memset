@@ -7,6 +7,7 @@
 #include <x86intrin.h>
 
 extern void *fancy_memset(void *s, int c, size_t n);
+extern void *fancy_memset_avx2(void *s, int c, size_t n);
 extern void *stos_memset(void *s, int c, size_t n);
 extern void *bionic_memset(void *s, int c, size_t n);
 extern void *freebsd_memset(void *s, int c, size_t n);
@@ -33,10 +34,11 @@ void bench(void *buf, size_t l) {
 	bencher(freebsd_, freebsd_memset);
 	bencher(stos_, stos_memset);
 	bencher(fancy_, fancy_memset);
+	bencher(fancy_avx2_, fancy_memset_avx2);
 
 	double avg = fancy_avg, stddev = fancy_stddev;
-	uint64_t d[] = {sys_avg, bionic_avg, freebsd_avg, stos_avg, fancy_avg};
-	uint64_t d2[] = {sys_stddev, bionic_stddev, freebsd_stddev, stos_stddev, fancy_stddev};
+	uint64_t d[] = {sys_avg, bionic_avg, freebsd_avg, stos_avg, fancy_avg, fancy_avx2_avg};
+	uint64_t d2[] = {sys_stddev, bionic_stddev, freebsd_stddev, stos_stddev, fancy_stddev, fancy_avx2_stddev};
 	printf("%10zu:", l);
 	for (int i = 0; i < sizeof(d)/sizeof(d[0]); i++) {
 		double x = avg / d[i];
@@ -59,7 +61,7 @@ void test(size_t l) {
 
 int main() {
 	printf("numbers are proportions; higher is better\n");
-	printf("size class:	system	bionic	fbsd	stos	fancy\n");
+	printf("size class:	system	bionic	fbsd	stos	fancy	avx2\n");
 	for (int i = 0; i <= 135; i++) test(i);
 	for (int i = 505; i <= 515; i++) test(i);
 	for (int i = 795; i <= 805; i++) test(i);

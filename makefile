@@ -6,16 +6,17 @@ erms ?= erms
 AFLAGS := -g $(m$(erms))
 CAFLAGS := $(c$(erms))
 AS := as
+M := memset.o memset-avx2.o
 C := competition/stos.o competition/bionic-memset.o competition/freebsd-memset.o
 
 default: dobench
 
-bench: bench.o memset.o $(C)
-	$(CC) $(LFLAGS) -o bench bench.o memset.o $(C)
+bench: bench.o $(M) $(C)
+	$(CC) $(LFLAGS) -o bench bench.o $(M) $(C)
 dobench: bench
 	./bench
-test: test.o memset.o
-	$(CC) $(LFLAGS) -o test test.o memset.o
+test: test.o $(M)
+	$(CC) $(LFLAGS) -o test test.o $(M)
 
 dotest: test
 	./test

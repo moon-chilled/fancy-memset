@@ -23,9 +23,9 @@
 # based on https://msrc-blog.microsoft.com/2021/01/11/building-faster-amd64-memset-routines/
 .intel_syntax noprefix
 
-.globl fancy_memset
+.globl fancy_memset_avx2
 .p2align 4
-fancy_memset:
+fancy_memset_avx2:
 # dst: rdi
 # c: sil
 # l: rdx
@@ -35,10 +35,10 @@ mov rax, rdi # todo would it be more efficient re codesize to use rax?
 movzx esi, sil
 imul esi, 0x01010101
 movd xmm0, esi
-pshufd xmm0, xmm0, 0
+vbroadcastsd ymm0, xmm0
 
-cmp rdx, 64
-jb .under64
+cmp rdx, 128
+jb .under128
 
 .ifdef erms
 cmp rdx, 800
@@ -46,52 +46,59 @@ jae .huge
 .endif
 
 # big
-movups [rdi], xmm0
-lea rsi, [rdi + 16]
-and rsi, ~15
+vmovups [rdi], ymm0
+lea rsi, [rdi + 32]
+and rsi, ~31
 sub rdi, rsi
 add rdx, rdi
 
-lea rcx, [rsi + rdx - 48] # last 3 aligned stores
-and rcx, ~15
-lea r8, [rsi + rdx - 16]  # last (unaligned) store
+lea rcx, [rsi + rdx - 96] # last 3 aligned stores
+and rcx, ~31
+lea r8, [rsi + rdx - 32]  # last (unaligned) store
 
-cmp rdx, 64
+cmp rdx, 128
 jb .trailing
 
 .bigloop:
-movaps [rsi], xmm0
-movaps [rsi + 16], xmm0
-movaps [rsi + 32], xmm0
-movaps [rsi + 48], xmm0
-add rsi, 64
+vmovaps [rsi], ymm0
+vmovaps [rsi + 32], ymm0
+vmovaps [rsi + 64], ymm0
+vmovaps [rsi + 96], ymm0
+add rsi, 128
 cmp rsi, rcx
 jb .bigloop
 
 .trailing:
-# trailing <64 bytes
-movaps [rcx], xmm0
-movaps [rcx + 16], xmm0
-movaps [rcx + 32], xmm0
-movups [r8], xmm0
+# trailing <128 bytes
+vmovaps [rcx], ymm0
+vmovaps [rcx + 32], ymm0
+vmovaps [rcx + 64], ymm0
+vmovups [r8], ymm0
 ret
 
-.under64:
+.under128:
+cmp rdx, 32
+jb .under32
+
+# 32-127 bytes
+lea rcx, [rdi + rdx - 32]
+and rdx, 64
+vmovups [rdi], ymm0
+shr rdx, 1            # rdx ← 32 × rdx ≥ 64
+vmovups [rcx], ymm0
+vmovups [rdi + rdx], ymm0
+neg rdx
+vmovups [rcx + rdx], ymm0
+ret
+
+.under32:
 cmp rdx, 16
 jb .under16
-
-# 16-63 bytes
-lea rcx, [rdi + rdx - 16]
-and rdx, 32
 movups [rdi], xmm0
-shr rdx, 1            # rdx ← 16 × rdx ≥ 32
-movups [rcx], xmm0
-movups [rdi + rdx], xmm0
-neg rdx
-movups [rcx + rdx], xmm0
+movups [rdi + rdx - 16], xmm0
 ret
 
-# basically a repeat of under64, but with 4-byte chunks instead of 16
+# basically a repeat of under128, but with 4-byte chunks instead of 32
 .under16:
 cmp rdx, 4
 jb .under4
