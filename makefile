@@ -6,8 +6,8 @@ AS := as
 
 default: dobench
 
-bench: bench.o memset.o
-	$(CC) $(LFLAGS) -o bench bench.o memset.o
+bench: bench.o memset.o competition/stos.o competition/bionic-memset.o
+	$(CC) $(LFLAGS) -o bench bench.o memset.o competition/stos.o competition/bionic-memset.o
 dobench: bench
 	./bench
 test: test.o memset.o
@@ -16,8 +16,10 @@ test: test.o memset.o
 dotest: test
 	./test
 
-memset.o: memset.s
-	$(AS) $(AFLAGS) -o memset.o memset.s
+.s.o:
+	$(AS) $(AFLAGS) -o $@ $<
+competition/bionic-memset.o: competition/bionic-memset.s
+	$(CC) -x assembler-with-cpp -c -o competition/bionic-memset.o competition/bionic-memset.s
 
 clean:
-	rm -f memset.o test.o bench.o test bench
+	rm -f *.o competition/*.o test bench
