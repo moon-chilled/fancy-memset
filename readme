@@ -1,10 +1,11 @@
-hopefully fast memset implementation
-numbers depend heavily on sizes, but:
+'fm' - 'fancy memset', a hopefully fast memset implementation
+numbers are variable and depend heavily on sizes, but:
 20-150% faster than freebsd memset
-300-500% faster than rep stos on erms systems, for sizes smaller than 0.5-1k (for sizes larger than that, it uses rep stos)
+300-500% faster than rep stos on erms systems, for sizes smaller than 0.5-1k (for sizes larger than that, fm uses rep stos so no comparison)
 500-1700% faster than openbsd memset
 5-100% faster than bionic memset[*], except for extremely small sizes (this is not really a fair comparison since the compiler will inline small constant memsets, and small nonconstant memsets are likely to be rare)
 30% slower than glibc
+20% smaller than freebsd/bionic.  Untold volumes smaller than glibc
 
 try it out on your system: 'make'
 if you have an amd cpu or an older intel cpu: 'make erms='
