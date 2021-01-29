@@ -1,4 +1,4 @@
-FLAGS := -O3 -fno-builtin -lm
+FLAGS := -O3 -g -fno-builtin -lm
 
 default: dobench
 
