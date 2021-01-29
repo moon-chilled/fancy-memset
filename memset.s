@@ -26,7 +26,6 @@ add rdx, rdi
 cmp rdx, 64
 jb trailing
 
-# todo this is wrong
 bigloop:
 movaps [rsi], xmm0
 movaps [rsi + 16], xmm0
