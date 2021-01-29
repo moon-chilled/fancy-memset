@@ -9,7 +9,7 @@
 extern void *fancy_memset(void *s, int c, size_t n);
 extern void *stos_memset(void *s, int c, size_t n);
 extern void *bionic_memset(void *s, int c, size_t n);
-#define N1 5
+#define N1 10
 #define N2 1000000
 
 #define bencher(p, fn) \
