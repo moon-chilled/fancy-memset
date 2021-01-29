@@ -7,7 +7,7 @@ numbers are variable and depend heavily on sizes, but:
 30% slower than glibc
 20% smaller than freebsd/bionic.  Untold volumes smaller than glibc
 
-try it out on your system: 'make'
-if you have an amd cpu or an older intel cpu: 'make erms='
+try out the benchmark suite on your own system: 'make'
+if you have an amd cpu or an older intel cpu, try: 'make erms='
 
 * this one is actually quite interesting.  On intel cpus, performance is only 5-30% better for small-med sizes.  Once sizes get quite large, though, fm performs 2x better because it takes advantage of erms.  On amd cpus, erms are not available, so performance for very large sizes is comparable (though fm still wins).  But performance for small-med sizes is much better for some reason.  So, 5-100% performance improvement is measurable on any cpu (except old intel chips, probably), but for different reasons.
