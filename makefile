@@ -8,5 +8,5 @@ dobench: bench
 	./bench
 test: test.c memset.s
 	$(CC) $(FLAGS) -o test test.c memset.s
-dotest: tst
+dotest: test
 	./test

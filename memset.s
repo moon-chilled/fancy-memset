@@ -9,15 +9,18 @@ fancy_memset:
 mov rax, rdi # todo would it be more efficient re codesize to use rax?
 
 movzx esi, sil
-imul esi, 0x01010101
+mov r8, 0x0101010101010101
+imul rsi, r8
 vmovd xmm0, esi
 vbroadcastss xmm0, xmm0
 
 cmp rdx, 64
 jb under64
 
+.ifdef erms
 cmp rdx, 800
-jae repeat
+jae erms
+.endif
 
 # big
 movups [rdi], xmm0
@@ -56,8 +59,8 @@ jb under16
 
 # 16-63 bytes
 lea rcx, [rdi + rdx - 16]
-movups [rdi], xmm0
 and rdx, 32
+movups [rdi], xmm0
 shr rdx, 1            # rdx ← 16 × rdx ≥ 32
 movups [rcx], xmm0
 movups [rdi + rdx], xmm0
@@ -81,31 +84,32 @@ mov [rcx + rdx], esi
 ret
 
 under4:
-jz done
-mov [rdi], sil
 cmp rdx, 1
-je done
+jb done
+mov [rdi], sil
+jbe done
 mov [rdi + 1], sil
 mov [rdi + rdx - 1], sil
 
 done:
 ret
 
-repeat:
 .ifdef erms
+erms:
 xchg rax, rsi
 mov rcx, rdx
 rep stosb
 mov rax, rsi
 ret
-.else
+.endif
+
+.if 0
+derms:
 xchg rax, rsi
 mov rcx, rdx
-shr rcx, 8
+shr rcx, 3
 rep stosq
+mov [rsi + rdx - 8], rax
 mov rax, rsi
-lea rcx, [rax + rdx - 48] # last 3 aligned stores
-and rcx, ~15
-lea r8, [rax + rdx - 16]  # last (unaligned) store
-jmp trailing
+ret
 .endif
