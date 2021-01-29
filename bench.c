@@ -9,6 +9,7 @@
 extern void *fancy_memset(void *s, int c, size_t n);
 extern void *stos_memset(void *s, int c, size_t n);
 extern void *bionic_memset(void *s, int c, size_t n);
+extern void *freebsd_memset(void *s, int c, size_t n);
 #define N1 5
 #define N2 1000000
 
@@ -29,11 +30,12 @@ extern void *bionic_memset(void *s, int c, size_t n);
 void bench(void *buf, size_t l) {
 	bencher(sys_, memset);
 	bencher(bionic_, bionic_memset);
+	bencher(freebsd_, freebsd_memset);
 	bencher(stos_, stos_memset);
 	bencher(fancy_, fancy_memset);
 
 	double avg = bionic_avg;
-	printf("%10zu: %2.3lf	%2.3lf	%2.3lf	%2.3lf\n", l, avg / sys_avg, avg / bionic_avg, avg / stos_avg, avg / fancy_avg);
+	printf("%10zu: %2.3lf	%2.3lf	%2.3lf	%2.3lf	%2.3lf\n", l, avg / sys_avg, avg / bionic_avg, avg / freebsd_avg, avg / stos_avg, avg / fancy_avg);
 }
 
 void test(size_t l) {
@@ -43,7 +45,7 @@ void test(size_t l) {
 }
 
 int main() {
-	printf("size class: system	bionic	stos	fancy\n");
+	printf("size class: system	bionic	fbsd	stos	fancy\n");
 	for (int i = 0; i <= 8; i++) test(i);
 	test(13);
 	test(15);
