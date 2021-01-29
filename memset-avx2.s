@@ -30,106 +30,112 @@ fancy_memset_avx2:
 # c: sil
 # l: rdx
 
-mov rax, rdi # todo would it be more efficient re codesize to use rax?
+mov	rax, rdi # todo would it be more efficient re codesize to use rax?
 
-movzx esi, sil
-imul esi, 0x01010101
-movd xmm0, esi
-vbroadcastsd ymm0, xmm0
+movzx	esi, sil
+imul	esi, 0x01010101
+movd	xmm0, esi
+vpbroadcastb ymm0, xmm0
 
-cmp rdx, 128
-jb .under128
+cmp	rdx, 128
+jb	.under128
 
 .ifdef erms
-cmp rdx, 800
-jae .huge
+cmp	rdx, 800
+jae	.huge
 .endif
 
 # big
-vmovups [rdi], ymm0
-lea rsi, [rdi + 32]
-and rsi, ~31
-sub rdi, rsi
-add rdx, rdi
+vmovups	[rdi], ymm0
+lea	rsi, [rdi + 32]
+and	rsi, ~31
+sub	rdi, rsi
+add	rdx, rdi
 
-lea rcx, [rsi + rdx - 96] # last 3 aligned stores
-and rcx, ~31
-lea r8, [rsi + rdx - 32]  # last (unaligned) store
+lea	rcx, [rsi + rdx - 96] # last 3 aligned stores
+and	rcx, ~31
+lea	r8, [rsi + rdx - 32]  # last (unaligned) store
 
-cmp rdx, 128
-jb .trailing
+cmp	rdx, 128
+jb	.trailing
 
 .bigloop:
-vmovaps [rsi], ymm0
-vmovaps [rsi + 32], ymm0
-vmovaps [rsi + 64], ymm0
-vmovaps [rsi + 96], ymm0
-add rsi, 128
-cmp rsi, rcx
-jb .bigloop
+vmovaps	[rsi], ymm0
+vmovaps	[rsi + 32], ymm0
+vmovaps	[rsi + 64], ymm0
+vmovaps	[rsi + 96], ymm0
+add	rsi, 128
+cmp	rsi, rcx
+jb	.bigloop
 
 .trailing:
 # trailing <128 bytes
-vmovaps [rcx], ymm0
-vmovaps [rcx + 32], ymm0
-vmovaps [rcx + 64], ymm0
-vmovups [r8], ymm0
+vmovaps	[rcx], ymm0
+vmovaps	[rcx + 32], ymm0
+vmovaps	[rcx + 64], ymm0
+vmovups	[r8], ymm0
+vzeroupper
 ret
 
 .under128:
-cmp rdx, 32
-jb .under32
+cmp	rdx, 32
+jb	.under32
 
 # 32-127 bytes
-lea rcx, [rdi + rdx - 32]
-and rdx, 64
-vmovups [rdi], ymm0
-shr rdx, 1            # rdx ← 32 × rdx ≥ 64
-vmovups [rcx], ymm0
-vmovups [rdi + rdx], ymm0
-neg rdx
-vmovups [rcx + rdx], ymm0
+lea	rcx, [rdi + rdx - 32]
+and	rdx, 64
+vmovups	[rdi], ymm0
+shr	rdx, 1            # rdx ← 32 × rdx ≥ 64
+vmovups	[rcx], ymm0
+vmovups	[rdi + rdx], ymm0
+neg	rdx
+vmovups	[rcx + rdx], ymm0
+vzeroupper
 ret
 
 .under32:
-cmp rdx, 16
-jb .under16
-movups [rdi], xmm0
-movups [rdi + rdx - 16], xmm0
+cmp	rdx, 16
+jb	.under16
+movups	[rdi], xmm0
+movups	[rdi + rdx - 16], xmm0
+vzeroupper
 ret
 
 # basically a repeat of under128, but with 4-byte chunks instead of 32
 .under16:
-cmp rdx, 4
-jb .under4
+cmp	rdx, 4
+jb	.under4
 
-lea rcx, [rdi + rdx - 4]
-mov [rdi], esi
-and rdx, 8
-shr rdx, 1          # rdx ← 4 × rdx ≥ 8
-mov [rcx], esi
-mov [rdi + rdx], esi
-neg rdx
-mov [rcx + rdx], esi
+lea	rcx, [rdi + rdx - 4]
+mov	[rdi], esi
+and	rdx, 8
+shr	rdx, 1          # rdx ← 4 × rdx ≥ 8
+mov	[rcx], esi
+mov	[rdi + rdx], esi
+neg	rdx
+mov	[rcx + rdx], esi
+vzeroupper
 ret
 
 .under4:
-cmp rdx, 1
-jb .done
-mov [rdi], sil
-jbe .done
-mov [rdi + 1], sil
-mov [rdi + rdx - 1], sil
+cmp	rdx, 1
+jb	.done
+mov	[rdi], sil
+jbe	.done
+mov	[rdi + 1], sil
+mov	[rdi + rdx - 1], sil
 
 .done:
+vzeroupper
 ret
 
 # todo apparently stosq is worth it for very large sizes (tipping point is >800 <4096) on amd chips.  Investigate.  (At least, it's better than the above loop; maybe an even-more-unrolled one beats it?)
 .ifdef erms
 .huge:
-xchg rax, rsi
-mov rcx, rdx
-rep stosb
-mov rax, rsi
+vzeroupper
+xchg	rax, rsi
+mov	rcx, rdx
+rep	stosb
+mov	rax, rsi
 ret
 .endif
