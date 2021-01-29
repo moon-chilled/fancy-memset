@@ -10,8 +10,7 @@ fancy_memset:
 mov rax, rdi # todo would it be more efficient re codesize to use rax?
 
 movzx esi, sil
-mov r8, 0x0101010101010101
-imul rsi, r8
+imul esi, 0x01010101
 vmovd xmm0, esi
 vbroadcastss xmm0, xmm0
 
@@ -100,17 +99,6 @@ ret
 xchg rax, rsi
 mov rcx, rdx
 rep stosb
-mov rax, rsi
-ret
-.endif
-
-.if 0
-derms:
-xchg rax, rsi
-mov rcx, rdx
-shr rcx, 3
-rep stosq
-mov [rsi + rdx - 8], rax
 mov rax, rsi
 ret
 .endif
