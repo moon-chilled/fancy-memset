@@ -1,0 +1,4 @@
+*.o
+bench
+test
+.*.swp
