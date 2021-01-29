@@ -16,6 +16,9 @@ vbroadcastss xmm0, xmm0
 cmp rdx, 64
 jb under64
 
+cmp rdx, 800
+jae erms
+
 # big
 movups [rdi], xmm0
 lea rsi, [rdi + 16]
@@ -86,4 +89,11 @@ mov [rdi + 1], sil
 mov [rdi + rdx - 1], sil
 
 done:
+ret
+
+erms:
+xchg rax, rsi
+mov rcx, rdx
+rep stosb
+mov rax, rsi
 ret
