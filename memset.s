@@ -22,8 +22,6 @@ lea rsi, [rdi + 16]
 and rsi, ~15
 sub rdi, rsi
 add rdx, rdi
-neg rdi
-add rdi, rsi
 
 cmp rdx, 64
 jb trailing
@@ -39,8 +37,6 @@ sub rdx, 64
 cmp rdx, 64
 jae bigloop
 
-#add rsi, 16
-#sub rsi, 64
 trailing:
 # trailing <64 bytes
 lea rcx, [rsi + rdx - 16] # last (unaligned) store
