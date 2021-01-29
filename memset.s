@@ -1,7 +1,7 @@
 # based on https://msrc-blog.microsoft.com/2021/01/11/building-faster-amd64-memset-routines/
-.globl fast_memset
+.globl fancy_memset
 .intel_syntax noprefix
-fast_memset:
+fancy_memset:
 # dst: rdi
 # c: sil
 # l: rdx

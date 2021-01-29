@@ -6,12 +6,12 @@
 #include <stdint.h>
 #include <x86intrin.h>
 
-extern void *fast_memset(void *s, int c, size_t n);
-#define N1 10
-#define N2 2000
+extern void *fancy_memset(void *s, int c, size_t n);
+#define N1 20
+#define N2 10000000
 
 #define bencher(before, after, avg, stddev, fn) \
-	for (int i = 0; i < 16; i++) fn(buf, 0, l); \
+	for (int i = 0; i < 16; i++) fn(buf, 0, l); /* cache! */\
 	uint64_t before[N1], after[N1]; \
 	uint64_t avg = 0, stddev = 0; \
 	for (int i = 0; i < N1; i++) { \
@@ -26,9 +26,10 @@ extern void *fast_memset(void *s, int c, size_t n);
 
 void bench(void *buf, size_t l) {
 	bencher(sys_before, sys_after, sys_avg, sys_stddev, memset);
-	bencher(fm_before, fm_after, fm_avg, fm_stddev, fast_memset);
+	bencher(fm_before, fm_after, fm_avg, fm_stddev, fancy_memset);
 
-	printf("Sys: %llu +/- %llu cycles;\n fm: %llu +/- %llu cycles\n", sys_avg, sys_stddev, fm_avg, fm_stddev);
+	printf("%4zu: %lf\t(%lli/%lli)\n", l, fm_avg / (double)sys_avg, fm_avg, sys_avg);
+	//printf("Sys: %llu +/- %llu cycles;\n fm: %llu +/- %llu cycles\n", sys_avg, sys_stddev, fm_avg, fm_stddev);
 }
 
 void test(size_t l) {
@@ -38,6 +39,21 @@ void test(size_t l) {
 }
 
 int main() {
-	//for (size_t i = 0; i < 0x50; i++) test(i);
-	test(0x90);
+	printf("Numbers are ratios of fancymemset:systemmemset time.  Lower is better (for us).\n");
+	for (int i = 0; i <= 8; i++) test(i);
+	test(13);
+	test(15);
+	test(16);
+	test(17);
+	test(31);
+	test(32);
+	test(33);
+	test(55);
+	test(63);
+	test(64);
+	test(65);
+	test(128);
+	test(512);
+	test(800);
+	test(4096);
 }
