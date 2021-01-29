@@ -18,7 +18,7 @@ jb under64
 
 # big
 movups [rdi], xmm0
-lea rsi, [rdi + 15]
+lea rsi, [rdi + 16]
 and rsi, ~15
 sub rdi, rsi
 add rdx, rdi
