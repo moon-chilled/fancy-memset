@@ -1,5 +1,6 @@
 # based on https://msrc-blog.microsoft.com/2021/01/11/building-faster-amd64-memset-routines/
 .globl fancy_memset
+
 .intel_syntax noprefix
 fancy_memset:
 # dst: rdi
@@ -15,11 +16,11 @@ vmovd xmm0, esi
 vbroadcastss xmm0, xmm0
 
 cmp rdx, 64
-jb under64
+jb .under64
 
 .ifdef erms
 cmp rdx, 800
-jae erms
+jae .huge
 .endif
 
 # big
@@ -34,18 +35,18 @@ and rcx, ~15
 lea r8, [rsi + rdx - 16]  # last (unaligned) store
 
 cmp rdx, 64
-jb trailing
+jb .trailing
 
-bigloop:
+.bigloop:
 movaps [rsi], xmm0
 movaps [rsi + 16], xmm0
 movaps [rsi + 32], xmm0
 movaps [rsi + 48], xmm0
 add rsi, 64
 cmp rsi, rcx
-jb bigloop
+jb .bigloop
 
-trailing:
+.trailing:
 # trailing <64 bytes
 movaps [rcx], xmm0
 movaps [rcx + 16], xmm0
@@ -53,9 +54,9 @@ movaps [rcx + 32], xmm0
 movups [r8], xmm0
 ret
 
-under64:
+.under64:
 cmp rdx, 16
-jb under16
+jb .under16
 
 # 16-63 bytes
 lea rcx, [rdi + rdx - 16]
@@ -69,9 +70,9 @@ movups [rcx + rdx], xmm0
 ret
 
 # basically a repeat of under64, but with 4-byte chunks instead of 16
-under16:
+.under16:
 cmp rdx, 4
-jb under4
+jb .under4
 
 lea rcx, [rdi + rdx - 4]
 mov [rdi], esi
@@ -83,19 +84,19 @@ neg rdx
 mov [rcx + rdx], esi
 ret
 
-under4:
+.under4:
 cmp rdx, 1
-jb done
+jb .done
 mov [rdi], sil
-jbe done
+jbe .done
 mov [rdi + 1], sil
 mov [rdi + rdx - 1], sil
 
-done:
+.done:
 ret
 
 .ifdef erms
-erms:
+.huge:
 xchg rax, rsi
 mov rcx, rdx
 rep stosb

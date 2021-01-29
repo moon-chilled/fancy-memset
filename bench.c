@@ -28,7 +28,7 @@ void bench(void *buf, size_t l) {
 	bencher(sys_before, sys_after, sys_avg, sys_stddev, memset);
 	bencher(fm_before, fm_after, fm_avg, fm_stddev, fancy_memset);
 
-	printf("%4zu: %lf\t(%lli/%lli)\n", l, fm_avg / (double)sys_avg, fm_avg, sys_avg);
+	printf("%4zu: %lf\t(%lli/%lli)\n", l, sys_avg / (double)fm_avg, sys_avg, fm_avg);
 	//printf("Sys: %llu +/- %llu cycles;\n fm: %llu +/- %llu cycles\n", sys_avg, sys_stddev, fm_avg, fm_stddev);
 }
 
@@ -39,7 +39,7 @@ void test(size_t l) {
 }
 
 int main() {
-	printf("Numbers are ratios of fancymemset:systemmemset time.  Lower is better (for us).\n");
+	printf("Numbers are ratios of systemmemset:fancymemset time.  Higher is better (for us).\n");
 	for (int i = 0; i <= 8; i++) test(i);
 	test(13);
 	test(15);
