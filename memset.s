@@ -11,8 +11,9 @@ mov rax, rdi # todo would it be more efficient re codesize to use rax?
 
 movzx esi, sil
 imul esi, 0x01010101
-vmovd xmm0, esi
-vbroadcastss xmm0, xmm0
+movd xmm0, esi
+pshufd xmm0, xmm0, 0
+#vbroadcastss xmm0, xmm0
 
 cmp rdx, 64
 jb .under64
