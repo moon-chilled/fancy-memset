@@ -15,6 +15,7 @@ void *naive_memset(void *s, int c, size_t n);
 #define N1 5
 #define N2 1000000
 
+//todo- benchmark variable sizes within an individual run to see what happens when the branch predictor isn't warmed up
 #define bencher(p, fn) \
 	for (int i = 0; i < 16; i++) fn(buf, 0, l); /* cache! */\
 	uint64_t p##before[N1], p##after[N1]; \
