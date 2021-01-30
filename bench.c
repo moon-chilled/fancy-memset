@@ -36,13 +36,12 @@ void bench(void *buf, size_t l) {
 	bencher(fancy_, fancy_memset);
 	bencher(fancy_avx2_, fancy_memset_avx2);
 
-	//double avg = fancy_avx2_avg, stddev = fancy_avx2_stddev;
-	double avg = sys_avg, stddev = sys_stddev;
+	double avg = fancy_avx2_avg, stddev = fancy_avx2_stddev;
 	uint64_t d[] = {sys_avg, bionic_avg, freebsd_avg, stos_avg, fancy_avg, fancy_avx2_avg};
 	uint64_t d2[] = {sys_stddev, bionic_stddev, freebsd_stddev, stos_stddev, fancy_stddev, fancy_avx2_stddev};
 	printf("%10zu:", l);
 	for (int i = 0; i < sizeof(d)/sizeof(d[0]); i++) {
-		double x = avg / d[i];
+		double x = d[i] / avg;
 		double delta = abs(avg - d[i]);
 		if (delta < d2[i] || delta < stddev
 		    || (0.95 < x && x < 1.05)) ; //insignificant
@@ -64,7 +63,10 @@ int main() {
 	printf("numbers are proportions; higher is better\n");
 	printf("size class:	system	bionic	fbsd	stos	fancy	avx2\n");
 	for (int i = 0; i <= 135; i++) test(i);
+	for (int i = 136; i <= 496; i += 20) test(i);
 	for (int i = 505; i <= 515; i++) test(i);
+	for (int i = 516; i <= 790; i += 20) test(i);
 	for (int i = 795; i <= 805; i++) test(i);
+	for (int i = 900; i < 4000; i += 100) test(i);
 	for (int i = 4090; i <= 4100; i++) test(i);
 }
