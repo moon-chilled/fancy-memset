@@ -1,14 +1,14 @@
 'fm' - 'fancy memset', a hopefully fast memset implementation
 numbers are variable and depend heavily on sizes, but the sse2 version is:
 20-150% faster than freebsd memset
-300-500% faster than naive rep stos on erms systems
+300-500% faster than naive rep stos (e.g. musl, ~openbsd) on erms systems
 500-1700% faster than openbsd memset
 5-100% faster than bionic memset[*], except for extremely small sizes (this is not really a fair comparison since the compiler will inline small constant memsets, and small nonconstant memsets are likely to be rare)
 (don't know about glibc, idk how to force it to use sse2)
-20% smaller than freebsd/bionic.  Untold volumes smaller than glibc
 
 avx2 version is:
 
+300-400% faster than a naive loop compiled with -O3 by gcc/icc/clang
 10-370% faster than glibc memset
 20-3700% faster than naive rep stos on erms systems
 50-470% faster than freebsd memset, for sizes larger than 64 bytes
