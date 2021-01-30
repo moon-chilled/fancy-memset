@@ -16,5 +16,8 @@ avx2 version is:
 
 try out the benchmark suite on your own system: 'make'
 if you have an amd cpu or an older intel cpu, try: 'make erms='
+on e.g. freebsd you may need to add 'AS=/usr/local/bin/as'
 
 * this one is actually quite interesting.  On intel cpus, performance is only 5-30% better for small-med sizes.  Once sizes get quite large, though, fm performs 2x better because it takes advantage of erms.  On amd cpus, erms are not available, so performance for very large sizes is comparable (though fm still wins).  But performance for small-med sizes is much better for some reason.  So, 5-100% performance improvement is measurable on any cpu (except old intel chips, probably), but for different reasons.
+
+todo compare against solaris/illumos memset: https://github.com/illumos/illumos-gate/blob/master/usr/src/lib/libc/amd64/gen/memset.s.  (Something that huge is obviously madness, but I do think that we can use jump tables to improve perf at small sizes.)
