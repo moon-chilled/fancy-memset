@@ -37,7 +37,7 @@ void bench(void *buf, size_t l) {
 	bencher(fancy_avx2_, fancy_memset_avx2);
 
 	//double avg = fancy_avx2_avg, stddev = fancy_avx2_stddev;
-	double avg = fancy_avg, stddev = fancy_stddev;
+	double avg = sys_avg, stddev = sys_stddev;
 	uint64_t d[] = {sys_avg, bionic_avg, freebsd_avg, stos_avg, fancy_avg, fancy_avx2_avg};
 	uint64_t d2[] = {sys_stddev, bionic_stddev, freebsd_stddev, stos_stddev, fancy_stddev, fancy_avx2_stddev};
 	printf("%10zu:", l);
@@ -55,8 +55,8 @@ void bench(void *buf, size_t l) {
 }
 
 void test(size_t l) {
-	void *x = malloc(l);
-	bench(x, l);
+	void *x = malloc(l + 1);
+	bench(1 + (char*)x, l);
 	free(x);
 }
 
