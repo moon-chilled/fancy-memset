@@ -36,6 +36,7 @@ movzx	esi, sil
 imul	esi, 0x01010101
 movd	xmm0, esi
 vpbroadcastb ymm0, xmm0
+#vpbroadcastb ymm0, esi - break in case of avx512
 
 cmp	rdx, 128
 jb	.under128

@@ -11,7 +11,7 @@ avx2 version is:
 
 10-370% faster than glibc memset
 20-3700% faster than naive rep stos on erms systems
-50-4700% faster than freebsd memset, for sizes larger than 64 bytes.  
+50-470% faster than freebsd memset, for sizes larger than 64 bytes
 
 
 try out the benchmark suite on your own system: 'make'
