@@ -41,7 +41,7 @@ cmp	rdx, 128
 jb	.under128
 
 .ifdef erms
-cmp	rdx, 800
+cmp	rdx, 256 * 1024 #~l1
 jae	.huge
 .endif
 
