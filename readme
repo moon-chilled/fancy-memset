@@ -1,10 +1,10 @@
 'fm' - 'fancy memset', a hopefully fast memset implementation
-numbers are variable and depend heavily on sizes, but:
+numbers are variable and depend heavily on sizes, but the sse2 version is:
 20-150% faster than freebsd memset
 300-500% faster than rep stos on erms systems, for sizes smaller than 0.5-1k (for sizes larger than that, fm uses rep stos so no comparison)
 500-1700% faster than openbsd memset
 5-100% faster than bionic memset[*], except for extremely small sizes (this is not really a fair comparison since the compiler will inline small constant memsets, and small nonconstant memsets are likely to be rare)
-30% slower than glibc
+(don't know about glibc, idk how to force it to use sse2)
 20% smaller than freebsd/bionic.  Untold volumes smaller than glibc
 
 try out the benchmark suite on your own system: 'make'

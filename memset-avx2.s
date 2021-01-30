@@ -78,27 +78,41 @@ vzeroupper
 ret
 
 .under128:
-cmp	rdx, 32
-jb	.under32
-
-# 32-127 bytes
+cmp	rdx, 64
+jb	.under64
+# 64-127 bytes
 lea	rcx, [rdi + rdx - 32]
 and	rdx, 64
 vmovups	[rdi], ymm0
 shr	rdx, 1            # rdx ← 32 × rdx ≥ 64
-vmovups	[rcx], ymm0
 vmovups	[rdi + rdx], ymm0
 neg	rdx
 vmovups	[rcx + rdx], ymm0
+vmovups	[rcx], ymm0
 vzeroupper
 ret
+
+.under64:
+vzeroupper
+cmp	rdx, 32
+jb	.under32
+# 32-63 bytes
+lea	rcx, [rdi + rdx - 16]
+and	rdx, 32
+movups	[rdi], xmm0
+shr	rdx, 1            # rdx ← 16 × rdx ≥ 32
+movups	[rdi + rdx], xmm0
+neg	rdx
+movups	[rcx + rdx], xmm0
+movups	[rcx], xmm0
+ret
+
 
 .under32:
 cmp	rdx, 16
 jb	.under16
 movups	[rdi], xmm0
 movups	[rdi + rdx - 16], xmm0
-vzeroupper
 ret
 
 # basically a repeat of under128, but with 4-byte chunks instead of 32
@@ -110,11 +124,10 @@ lea	rcx, [rdi + rdx - 4]
 mov	[rdi], esi
 and	rdx, 8
 shr	rdx, 1          # rdx ← 4 × rdx ≥ 8
-mov	[rcx], esi
 mov	[rdi + rdx], esi
 neg	rdx
 mov	[rcx + rdx], esi
-vzeroupper
+mov	[rcx], esi
 ret
 
 .under4:
@@ -126,7 +139,6 @@ mov	[rdi + 1], sil
 mov	[rdi + rdx - 1], sil
 
 .done:
-vzeroupper
 ret
 
 # todo apparently stosq is worth it for very large sizes (tipping point is >800 <4096) on amd chips.  Investigate.  (At least, it's better than the above loop; maybe an even-more-unrolled one beats it?)
