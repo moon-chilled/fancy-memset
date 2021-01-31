@@ -77,14 +77,14 @@ movups	[r8], xmm0
 ret
 
 .under64:
-cmp	rdx, 16
+cmp	edx, 16
 jb	.under16
 
 # 16-63 bytes
 lea	rcx, [rdi + rdx - 16]
-and	rdx, 32
+and	edx, 32
 movups	[rdi], xmm0
-shr	rdx, 1            # rdx ← 16 × rdx ≥ 32
+shr	edx, 1            # rdx ← 16 × rdx ≥ 32
 movups	[rdi + rdx], xmm0
 neg	rdx
 movups	[rcx + rdx], xmm0
@@ -93,13 +93,13 @@ ret
 
 # basically a repeat of under64, but with 4-byte chunks instead of 16
 .under16:
-cmp	rdx, 4
+cmp	edx, 4
 jb	.under4
 
 lea	rcx, [rdi + rdx - 4]
 mov	[rdi], esi
-and	rdx, 8
-shr	rdx, 1          # rdx ← 4 × rdx ≥ 8
+and	edx, 8
+shr	edx, 1          # rdx ← 4 × rdx ≥ 8
 mov	[rdi + rdx], esi
 neg	rdx
 mov	[rcx + rdx], esi
@@ -107,7 +107,7 @@ mov	[rcx], esi
 ret
 
 .under4:
-cmp	rdx, 1
+cmp	edx, 1
 jb	.done
 mov	[rdi], sil
 jbe	.done
