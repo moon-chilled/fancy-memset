@@ -32,8 +32,6 @@ fancy_memset_avx2:
 
 mov	rax, rdi # todo would it be more efficient re codesize to use rax?
 
-movzx	esi, sil
-imul	esi, 0x01010101
 movd	xmm0, esi
 vpbroadcastb ymm0, xmm0
 #vpbroadcastb ymm0, esi - break in case of avx512
@@ -121,6 +119,8 @@ ret
 cmp	rdx, 4
 jb	.under4
 
+movzx	esi, sil
+imul	esi, 0x01010101
 lea	rcx, [rdi + rdx - 4]
 mov	[rdi], esi
 and	rdx, 8
