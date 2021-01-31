@@ -6,7 +6,7 @@ erms ?= erms
 AFLAGS := -g $(m$(erms))
 CAFLAGS := $(c$(erms))
 AS := as
-M := memset.o memset-avx2.o
+M := memset-basic.o memset-sse2.o memset-avx2.o
 C := competition/stos.o competition/bionic-memset.o competition/freebsd-memset.o competition/naive-memset.o
 
 default: dobench

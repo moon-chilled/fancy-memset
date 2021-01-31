@@ -6,7 +6,8 @@
 #include <stdint.h>
 #include <x86intrin.h>
 
-void *fancy_memset(void *s, int c, size_t n);
+void *fancy_memset_basic(void *s, int c, size_t n);
+void *fancy_memset_sse2(void *s, int c, size_t n);
 void *fancy_memset_avx2(void *s, int c, size_t n);
 void *stos_memset(void *s, int c, size_t n);
 void *bionic_memset(void *s, int c, size_t n);
@@ -36,12 +37,13 @@ void bench(void *buf, size_t l) {
 	bencher(freebsd_, freebsd_memset);
 	bencher(stos_, stos_memset);
 	bencher(naive_, naive_memset);
-	bencher(fancy_, fancy_memset);
+	bencher(fancy_basic_, fancy_memset_basic);
+	bencher(fancy_sse2_, fancy_memset_sse2);
 	bencher(fancy_avx2_, fancy_memset_avx2);
 
-	double avg = fancy_avx2_avg, stddev = fancy_avx2_stddev;
-	uint64_t d[] = {sys_avg, bionic_avg, freebsd_avg, stos_avg, naive_avg, fancy_avg, fancy_avx2_avg};
-	uint64_t d2[] = {sys_stddev, bionic_stddev, freebsd_stddev, stos_stddev, naive_stddev, fancy_stddev, fancy_avx2_stddev};
+	double avg = fancy_basic_avg, stddev = fancy_basic_stddev;
+	uint64_t d[] = {sys_avg, bionic_avg, freebsd_avg, stos_avg, naive_avg, fancy_basic_avg, fancy_sse2_avg, fancy_avx2_avg};
+	uint64_t d2[] = {sys_stddev, bionic_stddev, freebsd_stddev, stos_stddev, naive_stddev, fancy_basic_stddev, fancy_sse2_stddev, fancy_avx2_stddev};
 	printf("%10zu:", l);
 	for (int i = 0; i < sizeof(d)/sizeof(d[0]); i++) {
 		double x = d[i] / avg;
@@ -64,7 +66,7 @@ void test(size_t l) {
 
 int main() {
 	printf("numbers are proportions; higher is better\n");
-	printf("size class:	system	bionic	fbsd	stos	naive	fancy	avx2\n");
+	printf("size class:	system	bionic	fbsd	stos	naive	fancy	sse2	avx2\n");
 	for (int i = 0; i <= 135; i++) test(i);
 	for (int i = 136; i <= 496; i += 20) test(i);
 	for (int i = 505; i <= 515; i++) test(i);

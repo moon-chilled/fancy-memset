@@ -4,7 +4,8 @@
 #include <assert.h>
 #include <stdlib.h>
 
-extern void *fancy_memset(void *s, int c, size_t n);
+extern void *fancy_memset_basic(void *s, int c, size_t n);
+extern void *fancy_memset_sse2(void *s, int c, size_t n);
 extern void *fancy_memset_avx2(void *s, int c, size_t n);
 
 void check(void *(*memsetter)(void*,int,size_t), void *buf, size_t l) {
@@ -25,7 +26,11 @@ void check(void *(*memsetter)(void*,int,size_t), void *buf, size_t l) {
 	free(buf);
 }
 
+#define GB (1024ul * 1024 * 1024)
+
 int main() {
-	for (size_t i = 2; i < 0x500; i++) check(fancy_memset, malloc(i), i);
+	for (size_t i = 2; i < 0x500; i++) check(fancy_memset_basic, malloc(i), i);
+	for (size_t i = 2; i < 0x500; i++) check(fancy_memset_sse2, malloc(i), i);
 	for (size_t i = 2; i < 0x500; i++) check(fancy_memset_avx2, malloc(i), i);
+	// todo 32-bit signed/unsigned overflow test
 }

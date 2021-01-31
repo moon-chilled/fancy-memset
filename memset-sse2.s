@@ -23,9 +23,9 @@
 # based on https://msrc-blog.microsoft.com/2021/01/11/building-faster-amd64-memset-routines/
 .intel_syntax noprefix
 
-.globl fancy_memset
+.globl fancy_memset_sse2
 .p2align 4
-fancy_memset:
+fancy_memset_sse2:
 # dst: rdi
 # c: sil
 # l: rdx
