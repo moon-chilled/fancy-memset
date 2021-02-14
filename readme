@@ -2,7 +2,6 @@
 numbers are variable and depend heavily on sizes, but the sse2 version is:
 20-150% faster than freebsd memset
 300-500% faster than naive rep stos (e.g. musl, ~openbsd) on erms systems
-500-1700% faster than openbsd memset
 5-100% faster than bionic memset[*], except for extremely small sizes (this is not really a fair comparison since the compiler will inline small constant memsets, and small nonconstant memsets are likely to be rare)
 (don't know about glibc, idk how to force it to use sse2)
 
