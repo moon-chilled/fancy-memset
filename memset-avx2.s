@@ -12,7 +12,7 @@
 # THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
 # AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
 # IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
-# ARE DISCLAIMED. IN NO EVENT SHALL <COPYRIGHT HOLDER> BE LIABLE FOR ANY
+# ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER BE LIABLE FOR ANY
 # DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
 # (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
 # LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
@@ -92,22 +92,17 @@ vzeroupper
 ret
 
 .under64:
-vzeroupper
 cmp	edx, 32
 jb	.under32
 # 32-63 bytes
-lea	rcx, [rdi + rdx - 16]
-and	edx, 32
-movups	[rdi], xmm0
-shr	edx, 1            # rdx ← 16 × rdx ≥ 32
-movups	[rdi + rdx], xmm0
-neg	rdx
-movups	[rcx + rdx], xmm0
-movups	[rcx], xmm0
+vmovups	[rdi], ymm0
+vmovups	[rdi + rdx - 32], ymm0
+vzeroupper
 ret
 
 
 .under32:
+vzeroupper
 cmp	edx, 16
 jb	.under16
 movups	[rdi], xmm0

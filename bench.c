@@ -41,7 +41,7 @@ void bench(void *buf, size_t l) {
 	bencher(fancy_sse2_, fancy_memset_sse2);
 	bencher(fancy_avx2_, fancy_memset_avx2);
 
-	double avg = fancy_basic_avg, stddev = fancy_basic_stddev;
+	double avg = fancy_avx2_avg, stddev = fancy_avx2_stddev;
 	uint64_t d[] = {sys_avg, bionic_avg, freebsd_avg, stos_avg, naive_avg, fancy_basic_avg, fancy_sse2_avg, fancy_avx2_avg};
 	uint64_t d2[] = {sys_stddev, bionic_stddev, freebsd_stddev, stos_stddev, naive_stddev, fancy_basic_stddev, fancy_sse2_stddev, fancy_avx2_stddev};
 	printf("%10zu:", l);
