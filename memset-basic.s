@@ -58,7 +58,7 @@ mov	[rdi + 16], rsi
 mov	[rdi + 24], rsi
 add	rdi, 32
 cmp	rdi, rcx
-jb	.bigloop
+jl	.bigloop
 
 # last 32 bytes
 mov	[rax + rdx - 32], rsi
@@ -87,6 +87,7 @@ ret
 cmp	edx, 4
 jb	.under4
 
+# 4-15 bytes
 lea	rcx, [rdi + rdx - 4]
 mov	[rdi], esi
 and	edx, 8

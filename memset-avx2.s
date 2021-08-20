@@ -53,10 +53,10 @@ add	rdx, rdi
 
 lea	rcx, [rsi + rdx - 96] # last 3 aligned stores
 and	rcx, ~31
-lea	r8, [rsi + rdx - 32]  # last (unaligned) store
+lea	r8,  [rsi + rdx - 32]  # last (unaligned) store
 
 cmp	rdx, 128
-jb	.trailing
+jl	.trailing
 
 .bigloop:
 vmovaps	[rsi], ymm0

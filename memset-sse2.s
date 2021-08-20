@@ -57,7 +57,7 @@ and	rcx, ~15
 lea	r8, [rsi + rdx - 16]  # last (unaligned) store
 
 cmp	rdx, 64
-jb	.trailing
+jl	.trailing
 
 .bigloop:
 movaps	[rsi], xmm0
