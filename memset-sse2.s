@@ -30,12 +30,18 @@ fancy_memset_sse2:
 # c: sil
 # l: rdx
 
-mov	rax, rdi # todo would it be more efficient re codesize to use rax?
-
+.ifdef ermsq
+mov	rax, 0x0101010101010101
 movzx	esi, sil
-imul	esi, 0x01010101
+imul	rsi, rax
+.else
+movzx	esi, sil
+imul	rsi, 0x01010101
+.endif
 movd	xmm0, esi
 pshufd	xmm0, xmm0, 0
+
+mov	rax, rdi # todo would it be more efficient re codesize to use rax?
 
 cmp	rdx, 64
 jb	.under64
@@ -43,6 +49,11 @@ jb	.under64
 .ifdef erms
 cmp	rdx, 800
 jae	.huge
+.else
+.ifdef ermsq
+cmp	rdx, 2600
+jae	.huge
+.endif
 .endif
 
 # big
@@ -117,7 +128,6 @@ mov	[rdi + rdx - 1], sil
 .done:
 ret
 
-# todo apparently stosq is worth it for very large sizes (tipping point is >800 <4096) on non-erms chips.  Investigate.  (At least, it's better than the above loop; maybe an even-more-unrolled one beats it?)
 .ifdef erms
 .huge:
 movups	[rdi], xmm0
@@ -134,4 +144,23 @@ xchg	rax, rsi
 rep	stosb
 mov	rax, rsi
 ret
+.else
+.ifdef ermsq
+.huge:
+# only bother with 32-byte alignment here
+movups	[rdi], xmm0
+movups	[rdi + 16], xmm0
+mov	rcx, rdx
+mov	r8, rdi
+add 	rdi, 31
+and	rdi, ~31
+sub	r8, rdi
+add	rcx, r8
+shr	rcx, 3
+xchg	rax, rsi
+rep	stosq
+mov	rax, rsi
+movups	[rax + rdx - 16], xmm0
+ret
+.endif
 .endif

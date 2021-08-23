@@ -1,13 +1,15 @@
 CFLAGS := -O3 -g -fno-builtin
 LFLAGS := -lm
 merms := --defsym erms=1
+mq := --defsym ermsq=1
 cerms := -Derms=1
+cq := -Dermsq=1
 erms ?= erms
 AFLAGS := -g $(m$(erms))
 CAFLAGS := $(c$(erms))
 AS := as
 M := memset-basic.o memset-sse2.o memset-avx2.o
-C := competition/stos.o competition/bionic-memset.o competition/freebsd-memset.o competition/naive-memset.o
+C := competition/stos.o competition/bionic-memset.o competition/freebsd-memset.o competition/naive-memset.o competition/solaris-memset.o
 
 default: dobench
 
