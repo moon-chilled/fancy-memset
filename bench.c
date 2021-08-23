@@ -5,6 +5,7 @@
 #include <stdlib.h>
 #include <stdint.h>
 #include <x86intrin.h>
+#include <cpuid.h>
 
 void *fancy_memset_basic(void *s, int c, size_t n);
 void *fancy_memset_sse2(void *s, int c, size_t n);
@@ -25,9 +26,11 @@ int colour = 0;
 	uint64_t p##before[N1], p##after[N1]; \
 	uint64_t p##avg = 0, p##stddev = 0; \
 	for (int i = 0; i < N1; i++) { \
+		__get_cpuid_max(0, 0); \
 		p##before[i] = __rdtsc(); \
 		for (int _ = 0; _ < N2; _++) fn(buf, 0, l); \
-		p##after[i] = __rdtsc(); \
+		p##after[i] = __rdtscp(&(unsigned){0}); \
+		__get_cpuid_max(0, 0); \
 		p##avg += p##after[i] - p##before[i]; \
 	} \
 	p##avg /= N1; \

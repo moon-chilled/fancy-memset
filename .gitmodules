@@ -1,0 +1,3 @@
+[submodule "optfetch"]
+	path = optfetch
+	url = https://github.com/moon-chilled/OptFetch
