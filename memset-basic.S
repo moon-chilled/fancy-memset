@@ -23,99 +23,75 @@
 # based on https://msrc-blog.microsoft.com/2021/01/11/building-faster-amd64-memset-routines/
 .intel_syntax noprefix
 
-.globl fancy_memset_avx2
+#ifndef MEMSET
+#define MEMSET fancy_memset_basic
+#endif
+
+# memset implementation not relying on simd registers, suitable for a multitasking kernel
+.globl MEMSET
 .p2align 4
-fancy_memset_avx2:
+MEMSET:
 # dst: rdi
 # c: sil
 # l: rdx
 
 mov	rax, rdi # todo would it be more efficient re codesize to use rax?
 
-movd	xmm0, esi
-vpbroadcastb ymm0, xmm0
-#vpbroadcastb ymm0, esi - break in case of avx512
+movzx	esi, sil
+mov	r8, 0x0101010101010101
+imul	rsi, r8
 
-cmp	rdx, 128
-jb	.under128
+cmp	rdx, 32
+jb	.Lunder32
 
-.ifdef erms
-cmp	rdx, 256 * 1024 #~l1
-jae	.huge
-.endif
+#ifdef erms
+cmp	rdx, 800
+jae	.Lhuge
+#endif
 
 # big
-vmovups	[rdi], ymm0
-lea	rsi, [rdi + 32]
-and	rsi, ~31
-sub	rdi, rsi
-add	rdx, rdi
+lea	r9, [rdx - 1] #round _down_; that is, if rdx is a multiple of 32, r9 should be the next one down; otherwise trunc
+                      #this reduces the number of redundant stores (though it doesn't get rid of them in the case when rdx=32)
+and	r9, ~31
+lea	rcx, [rdi + r9]
 
-lea	rcx, [rsi + rdx - 96] # last 3 aligned stores
-and	rcx, ~31
-lea	r8,  [rsi + rdx - 32]  # last (unaligned) store
+.Lbigloop:
+mov	[rdi], rsi
+mov	[rdi +  8], rsi
+mov	[rdi + 16], rsi
+mov	[rdi + 24], rsi
+add	rdi, 32
+cmp	rdi, rcx
+jl	.Lbigloop
 
-cmp	rdx, 128
-jl	.trailing
-
-.bigloop:
-vmovaps	[rsi], ymm0
-vmovaps	[rsi + 32], ymm0
-vmovaps	[rsi + 64], ymm0
-vmovaps	[rsi + 96], ymm0
-add	rsi, 128
-cmp	rsi, rcx
-jb	.bigloop
-
-.trailing:
-# trailing <128 bytes
-vmovaps	[rcx], ymm0
-vmovaps	[rcx + 32], ymm0
-vmovaps	[rcx + 64], ymm0
-vmovups	[r8], ymm0
-vzeroupper
+# last 32 bytes
+mov	[rax + rdx - 32], rsi
+mov	[rax + rdx - 24], rsi
+mov	[rax + rdx - 16], rsi
+mov	[rax + rdx -  8], rsi
 ret
 
-.under128:
-cmp	edx, 64
-jb	.under64
-# 64-127 bytes
-lea	rcx, [rdi + rdx - 32]
-and	edx, 64
-vmovups	[rdi], ymm0
-shr	edx, 1            # rdx ← 32 × rdx ≥ 64
-vmovups	[rdi + rdx], ymm0
-neg	rdx
-vmovups	[rcx + rdx], ymm0
-vmovups	[rcx], ymm0
-vzeroupper
-ret
-
-.under64:
-cmp	edx, 32
-jb	.under32
-# 32-63 bytes
-vmovups	[rdi], ymm0
-vmovups	[rdi + rdx - 32], ymm0
-vzeroupper
-ret
-
-
-.under32:
-vzeroupper
+.Lunder32:
 cmp	edx, 16
-jb	.under16
-movups	[rdi], xmm0
-movups	[rdi + rdx - 16], xmm0
+jb	.Lunder16
+
+# 16-31 bytes
+lea	rcx, [rdi + rdx - 8]
+and	edx, 16
+shr	edx, 1            # rdx ← 8 × rdx ≥ 16
+mov	[rdi], rsi
+mov	[rdi + rdx], rsi
+neg	rdx
+mov	[rcx + rdx], rsi
+mov	[rcx], rsi
 ret
 
-# basically a repeat of under128, but with 4-byte chunks instead of 32
-.under16:
+# basically a repeat of under32, but with 4-byte chunks instead of 8
+.Lunder16:
 cmp	edx, 4
-jb	.under4
+jb	.Lunder4
 
-movzx	esi, sil
-imul	esi, 0x01010101
+# 4-15 bytes
 lea	rcx, [rdi + rdx - 4]
 mov	[rdi], esi
 and	edx, 8
@@ -126,31 +102,32 @@ mov	[rcx + rdx], esi
 mov	[rcx], esi
 ret
 
-.under4:
+.Lunder4:
 cmp	edx, 1
-jb	.done
+jb	.Ldone
 mov	[rdi], sil
-jbe	.done
+jbe	.Ldone
 mov	[rdi + 1], sil
 mov	[rdi + rdx - 1], sil
 
-.done:
+.Ldone:
 ret
 
-# todo apparently stosq is worth it for very large sizes (tipping point is >800 <4096) on amd chips.  Investigate.  (At least, it's better than the above loop; maybe an even-more-unrolled one beats it?)
-.ifdef erms
-.huge:
-vmovups	[rdi], ymm0
-vmovups	[rdi + 32], ymm0
+# todo apparently stosq is worth it for very large sizes (tipping point is >800 <4096) on non-erms chips.  Investigate.  (At least, it's better than the above loop; maybe an even-more-unrolled one beats it?)
+#ifdef erms
+.Lhuge:
+mov	[rdi], rsi
+mov	[rdi +  8], rsi
+mov	[rdi + 16], rsi
+mov	[rdi + 24], rsi
 mov	rcx, rdx
 mov	r8, rdi
-add	rdi, 63
-and	rdi, ~63
+add 	rdi, 31
+and	rdi, ~31
 sub	r8, rdi
 add	rcx, r8
 xchg	rax, rsi
 rep	stosb
 mov	rax, rsi
-vzeroupper
 ret
-.endif
+#endif

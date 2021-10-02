@@ -20,6 +20,11 @@ dobench: bench
 test: test.o $(M)
 	$(CC) $(LFLAGS) -o test test.o $(M)
 
+memset: $(M)
+	$(CC) -shared -o memset-basic.so memset-basic.o
+	$(CC) -shared -o memset-sse2.so memset-sse2.o
+	$(CC) -shared -o memset-avx2.so memset-avx2.o
+
 dotest: test
 	./test
 

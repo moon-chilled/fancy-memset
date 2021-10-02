@@ -23,38 +23,40 @@
 # based on https://msrc-blog.microsoft.com/2021/01/11/building-faster-amd64-memset-routines/
 .intel_syntax noprefix
 
-.globl fancy_memset_sse2
+#ifndef MEMSET
+#define MEMSET fancy_memset_sse2
+#endif
+
+.globl MEMSET
 .p2align 4
-fancy_memset_sse2:
+MEMSET:
 # dst: rdi
 # c: sil
 # l: rdx
 
-.ifdef ermsq
+#ifdef ermsq
 mov	rax, 0x0101010101010101
 movzx	esi, sil
 imul	rsi, rax
-.else
+#else
 movzx	esi, sil
 imul	rsi, 0x01010101
-.endif
+#endif
 movd	xmm0, esi
 pshufd	xmm0, xmm0, 0
 
 mov	rax, rdi # todo would it be more efficient re codesize to use rax?
 
 cmp	rdx, 64
-jb	.under64
+jb	.Lunder64
 
-.ifdef erms
+#ifdef erms
 cmp	rdx, 800
-jae	.huge
-.else
-.ifdef ermsq
+jae	.Lhuge
+#elif defined(ermsq)
 cmp	rdx, 2600
-jae	.huge
-.endif
-.endif
+jae	.Lhuge
+#endif
 
 # big
 movups	[rdi], xmm0
@@ -68,18 +70,18 @@ and	rcx, ~15
 lea	r8, [rsi + rdx - 16]  # last (unaligned) store
 
 cmp	rdx, 64
-jl	.trailing
+jl	.Ltrailing
 
-.bigloop:
+.Lbigloop:
 movaps	[rsi], xmm0
 movaps	[rsi + 16], xmm0
 movaps	[rsi + 32], xmm0
 movaps	[rsi + 48], xmm0
 add	rsi, 64
 cmp	rsi, rcx
-jb	.bigloop
+jb	.Lbigloop
 
-.trailing:
+.Ltrailing:
 # trailing <64 bytes
 movaps	[rcx], xmm0
 movaps	[rcx + 16], xmm0
@@ -87,9 +89,9 @@ movaps	[rcx + 32], xmm0
 movups	[r8], xmm0
 ret
 
-.under64:
+.Lunder64:
 cmp	edx, 16
-jb	.under16
+jb	.Lunder16
 
 # 16-63 bytes
 lea	rcx, [rdi + rdx - 16]
@@ -103,9 +105,9 @@ movups	[rcx], xmm0
 ret
 
 # basically a repeat of under64, but with 4-byte chunks instead of 16
-.under16:
+.Lunder16:
 cmp	edx, 4
-jb	.under4
+jb	.Lunder4
 
 lea	rcx, [rdi + rdx - 4]
 mov	[rdi], esi
@@ -117,19 +119,19 @@ mov	[rcx + rdx], esi
 mov	[rcx], esi
 ret
 
-.under4:
+.Lunder4:
 cmp	edx, 1
-jb	.done
+jb	.Ldone
 mov	[rdi], sil
-jbe	.done
+jbe	.Ldone
 mov	[rdi + 1], sil
 mov	[rdi + rdx - 1], sil
 
-.done:
+.Ldone:
 ret
 
-.ifdef erms
-.huge:
+#ifdef erms
+.Lhuge:
 movups	[rdi], xmm0
 movups	[rdi + 16], xmm0
 movups	[rdi + 32], xmm0
@@ -144,9 +146,8 @@ xchg	rax, rsi
 rep	stosb
 mov	rax, rsi
 ret
-.else
-.ifdef ermsq
-.huge:
+#elif defined(ermsq)
+.Lhuge:
 # only bother with 32-byte alignment here
 movups	[rdi], xmm0
 movups	[rdi + 16], xmm0
@@ -162,5 +163,4 @@ rep	stosq
 mov	rax, rsi
 movups	[rax + rdx - 16], xmm0
 ret
-.endif
-.endif
+#endif
