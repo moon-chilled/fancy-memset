@@ -921,7 +921,7 @@ L(use_rep):
 		xchg   %rax,%rdx
 		shrq   $3,%rcx
 		rep
-		  sstoq
+		  stosq
 		xchg   %rax,%rdx
 		andq   $7,%r8			# remaining bytes
 		jnz    1b
