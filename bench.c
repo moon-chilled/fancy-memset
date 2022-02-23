@@ -6,6 +6,7 @@
 #include <stdint.h>
 #include <x86intrin.h>
 #include <cpuid.h>
+#include <assert.h>
 
 void *fancy_memset_basic(void *s, int c, size_t n);
 void *fancy_memset_sse2(void *s, int c, size_t n);
@@ -15,10 +16,10 @@ void *bionic_memset(void *s, int c, size_t n);
 void *freebsd_memset(void *s, int c, size_t n);
 void *naive_memset(void *s, int c, size_t n);
 void *solaris_memset(void *s, int c, size_t n);
-#define N1 5
-#define N2 1000000
+#define N1 64
+#define N2 100000
 
-int colour = 0;
+int colour = 1;
 
 //todo- benchmark variable sizes within an individual run to see what happens when the branch predictor isn't warmed up
 #define bencher(p, fn) \
@@ -28,7 +29,7 @@ int colour = 0;
 	for (int i = 0; i < N1; i++) { \
 		__get_cpuid_max(0, 0); \
 		p##before[i] = __rdtsc(); \
-		for (int _ = 0; _ < N2; _++) fn(buf, 0, l); \
+		for (int _ = 0; _ < N2; _++) fn(buf+i, 0, l); \
 		p##after[i] = __rdtscp(&(unsigned){0}); \
 		__get_cpuid_max(0, 0); \
 		p##avg += p##after[i] - p##before[i]; \
@@ -38,6 +39,8 @@ int colour = 0;
 	p##stddev = sqrt(p##stddev/N1);
 
 void bench(void *buf, size_t l) {
+	assert(l >= N1);
+	l -= N1 - 1;
 	bencher(sys_, memset);
 	bencher(bionic_, bionic_memset);
 	bencher(solaris_, solaris_memset);
@@ -48,8 +51,8 @@ void bench(void *buf, size_t l) {
 	bencher(fancy_sse2_, fancy_memset_sse2);
 	bencher(fancy_avx2_, fancy_memset_avx2);
 
-	//double avg = fancy_sse2_avg, stddev = fancy_sse2_stddev;
-	double avg = 100000000.0, stddev = 0;
+	double avg = fancy_sse2_avg, stddev = fancy_sse2_stddev;
+	//double avg = 100000000.0, stddev = 0;
 	uint64_t d[] = {sys_avg, bionic_avg, solaris_avg, freebsd_avg, stos_avg, naive_avg, fancy_basic_avg, fancy_sse2_avg, fancy_avx2_avg};
 	uint64_t d2[] = {sys_stddev, bionic_stddev, solaris_stddev, freebsd_stddev, stos_stddev, naive_stddev, fancy_basic_stddev, fancy_sse2_stddev, fancy_avx2_stddev};
 	printf("%10zu:", l);
@@ -76,13 +79,13 @@ void test(size_t l) {
 int main() {
 	printf("numbers are proportions; higher is better\n");
 	printf("size class:	system	bionic	solaris	fbsd	stos	naive	fancy	sse2	avx2\n");
-	//for (int i = 0; i <= 135; i++) test(i);
-	//for (int i = 136; i <= 496; i += 20) test(i);
-	//for (int i = 505; i <= 515; i++) test(i);
-	//for (int i = 516; i <= 790; i += 20) test(i);
-	//for (int i = 795; i <= 805; i++) test(i);
-	//for (int i = 900; i < 2048; i += 200) test(i);
-	//for (int i = 2300; i < 4000; i += 400) test(i);
-	//for (int i = 4090; i <= 4100; i++) test(i);
+	for (int i = 64; i <= 135; i++) test(i);
+	for (int i = 136; i <= 496; i += 20) test(i);
+	for (int i = 505; i <= 515; i++) test(i);
+	for (int i = 516; i <= 790; i += 20) test(i);
+	for (int i = 795; i <= 805; i++) test(i);
+	for (int i = 900; i < 2048; i += 200) test(i);
+	for (int i = 2300; i < 4000; i += 400) test(i);
+	for (int i = 4090; i <= 4100; i++) test(i);
 	for (int i = 1800; i < 3600; i += 50) test(i);
 }
