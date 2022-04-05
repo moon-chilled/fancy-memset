@@ -44,7 +44,7 @@ cmp	rdx, 128
 jb	.Lunder128
 
 #ifdef erms
-cmp	rdx, 256 * 1024 #~l1
+cmp	rdx, 256 * 1024 #~l2
 jae	.Lhuge
 #endif
 
